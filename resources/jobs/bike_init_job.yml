@@ -1,0 +1,29 @@
+resources:
+  jobs:
+    bike_init_job:
+      name: dbdemos_job_bike_init_ivan_calvo
+      max_concurrent_runs: 1
+
+      email_notifications:
+        on_failure:
+          - ${var.notification_email}
+
+      tags:
+        owner: ${workspace.current_user.userName}
+        project: ${bundle.name}
+
+      tasks:
+        - task_key: init_data
+          notebook_task:
+            notebook_path: ../../src/bike_init_job/01-Bike-Data-generator.py
+
+        - task_key: start_sdp_pipeline
+          depends_on:
+            - task_key: init_data
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.bike_pipeline.id}
+            full_refresh: true
+
+      permissions:
+        - level: CAN_MANAGE
+          user_name: ${workspace.current_user.userName}
